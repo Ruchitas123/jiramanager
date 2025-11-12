@@ -12,5 +12,10 @@ out/
 # Environment variables
 .env
 
+# Sensitive data files (disabled but blocked as safety measure)
+email-activity-log.json
+*activity*.log
+*.sensitive
+
 # Cursor
 .cursor/

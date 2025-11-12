@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JIRA Email Reminder Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fab fa-jira"></i>
+                    <h1>JIRA Email Reminder Manager</h1>
+                </div>
+                <div class="header-actions">
+                    <div class="connection-status" id="connection-status">
+                        <i class="fas fa-circle"></i>
+                        <span>Checking connection...</span>
+                    </div>
+                    <div class="settings-dropdown">
+                        <button class="settings-btn" id="settings-btn">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <div class="settings-menu" id="settings-menu">
+                            <div class="settings-item">
+                                <button class="btn btn-info btn-full" id="test-connection">
+                                    <i class="fas fa-link"></i>
+                                    Test JIRA Connection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Add JIRA ID Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-plus-circle"></i> Add JIRA Board</h2>
+                </div>
+                <div class="card-content">
+                    <div class="add-jira-section">
+                        <p class="section-description">Add a JIRA board to start managing email reminders</p>
+                        <button class="btn btn-success btn-large" id="add-jira-id-btn">
+                            <i class="fas fa-plus"></i>
+                            Add New JIRA Board
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved JIRA IDs Card -->
+            <div class="card" id="saved-jira-cards" style="display: none;">
+                <div class="card-header">
+                    <h2><i class="fas fa-bookmark"></i> Your JIRA Boards</h2>
+                    <button class="btn btn-success" id="add-another-jira-btn">
+                        <i class="fas fa-plus"></i>
+                        Add Another
+                    </button>
+                </div>
+                <div class="card-content">
+                    <div id="saved-jira-ids">
+                        <!-- Saved JIRA IDs will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Scheduled Tasks Card - Hidden by default -->
+            <div class="card" id="scheduled-tasks-card" style="display: none;">
+                <div class="card-header">
+                    <h2><i class="fas fa-clock"></i> Scheduled Tasks</h2>
+                    <button class="btn btn-outline" id="refresh-schedules">
+                        <i class="fas fa-refresh"></i>
+                        Refresh
+                    </button>
+                </div>
+                <div class="card-content">
+                    <div id="scheduled-tasks">
+                        <!-- Scheduled tasks will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-history"></i> Recent Activity</h2>
+                    <button class="btn btn-outline" id="refresh-activity">
+                        <i class="fas fa-refresh"></i>
+                        Refresh
+                    </button>
+                </div>
+                <div class="card-content">
+                    <div id="activity-log">
+                        <div class="activity-item">
+                            <i class="fas fa-info-circle text-blue"></i>
+                            <span>Welcome! Add a JIRA board to get started.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add JIRA ID Modal -->
+    <div id="add-jira-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add JIRA Board</h3>
+                <button class="modal-close" id="jira-modal-close">&times;</button>
+            </div>
+            <form id="add-jira-form">
+                <div class="form-group">
+                    <label for="jira-name">Board Name:</label>
+                    <input type="text" id="jira-name" required placeholder="e.g., CQDOC Sprint Board" />
+                </div>
+                <div class="form-group">
+                    <label for="jira-rapid-id">Rapid View ID:</label>
+                    <input type="text" id="jira-rapid-id" required placeholder="e.g., 44313" />
+                    <small class="form-help">You can find this ID in your JIRA board URL</small>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-info btn-full" id="validate-board-modal">
+                        <i class="fas fa-check"></i>
+                        Validate Board
+                    </button>
+                </div>
+                <div id="board-validation-result" class="validation-result hidden">
+                    <!-- Validation result will appear here -->
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="cancel-jira">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="save-jira-btn" disabled>
+                        <i class="fas fa-save"></i>
+                        Save JIRA Board
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div id="schedule-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="schedule-modal-title">Schedule Email</h3>
+                <button class="modal-close" id="schedule-modal-close">&times;</button>
+            </div>
+            <form id="schedule-form">
+                <input type="hidden" id="schedule-type" />
+                <div class="form-group">
+                    <label for="schedule-frequency">Frequency:</label>
+                    <select id="schedule-frequency">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="schedule-time">Time:</label>
+                    <input type="time" id="schedule-time" value="09:00" />
+                </div>
+                <div class="form-group" id="weekly-day-group">
+                    <label for="schedule-day">Day of Week:</label>
+                    <select id="schedule-day">
+                        <option value="0">Sunday</option>
+                        <option value="1" selected>Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="cancel-schedule">Cancel</button>
+                    <button type="submit" class="btn btn-success">Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="confirm-modal-title">Confirm Action</h3>
+                <button class="modal-close" id="confirm-modal-close">&times;</button>
+            </div>
+            <div class="confirm-modal-body">
+                <div class="confirm-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <p id="confirm-modal-message">Are you sure you want to proceed?</p>
+                <div id="confirm-modal-details" class="confirm-details hidden">
+                    <!-- Additional details will be shown here -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" id="confirm-cancel">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-proceed">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

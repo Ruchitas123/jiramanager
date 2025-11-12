@@ -5,8 +5,18 @@
     "main": "build/scrapeJiraBoard.js",
     "scripts": {
         "build": "tsc",
-        "start": "npm run build && node build/scrapeJiraBoard.js",
-        "dev": "ts-node --esm src/scrapeJiraBoard.ts",
+        "start": "npm run web",
+        "sprint-update": "npm run build && node build/scrapeJiraBoard.js",
+        "sprint-update-dev": "ts-node --esm src/scrapeJiraBoard.ts",
+        "dev": "npm run sprint-update-dev",
+        "weekly-reminder": "npm run build && node build/runWeeklyReminders.js",
+        "weekly-reminder-dev": "node --loader ts-node/esm src/runWeeklyReminders.ts",
+        "view-activity": "npm run build && node build/viewEmailActivity.js",
+        "view-activity-dev": "node --loader ts-node/esm src/viewEmailActivity.ts",
+        "test-ldap": "npm run build && node build/testLdap.js",
+        "test-ldap-dev": "node --loader ts-node/esm src/testLdap.ts",
+        "web": "npm run build && node build/webServer.js",
+        "web-dev": "node --loader ts-node/esm src/webServer.ts",
         "clean": "rm -rf build"
     },
     "files": [
@@ -25,12 +35,19 @@
     "devDependencies": {
         "@types/node": "^22.10.0",
         "@types/nodemailer": "^6.4.17",
+        "@types/express": "^4.17.21",
+        "@types/cors": "^2.8.17",
+        "@types/node-cron": "^3.0.11",
         "ts-node": "^10.9.2",
         "typescript": "^5.7.2"
     },
     "dependencies": {
         "axios": "^1.9.0",
         "dotenv": "^16.5.0",
-        "nodemailer": "^7.0.3"
+        "express": "^4.18.2",
+        "cors": "^2.8.5",
+        "ldapts": "^8.0.9",
+        "nodemailer": "^7.0.3",
+        "node-cron": "^3.0.3"
     }
 }

@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import JiraService, { JiraIssue } from './jiraService.js';
+import EmailActivityLogger from './emailActivityLogger.js';
 
 // Get current directory for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -157,15 +158,23 @@ async function sendEmail(issues: Issue[]): Promise<void> {
             throw new Error('No valid email recipients found in environment variables');
         }
 
+        // Prepare CC recipient
+        const ccRecipient = process.env.CC_EMAIL?.trim();
+
         console.log(`📬 Sending email to ${recipients.length} recipient(s):`);
         recipients.forEach(email => console.log(`  - ${email}`));
+        
+        if (ccRecipient) {
+            console.log(`📄 CC: ${ccRecipient}`);
+        }
 
         // Email options with updated HTML template
         const mailOptions = {
             from: `"${process.env.SENDER_NAME}" <${process.env.SENDER_EMAIL}>`,
             to: recipients.join(','),
+            cc: ccRecipient,
             subject: `Sprint Update`,
-            text: `Sprint Update\n\nSummary\n${summary}\n\nBelow is the current status of all issues in the active sprint:\nActive Sprint Issues\n${table}\n\nThis is an automated update from the Jira Sprint Board.`,
+            text: `Sprint Update\n\nSummary\n${summary}\n\nBelow is the current status of all issues in the active sprint:\nActive Sprint Issues\n${table}`,
             html: `
                 <!DOCTYPE html>
                 <html>
@@ -227,11 +236,6 @@ async function sendEmail(issues: Issue[]): Promise<void> {
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Footer -->
-                    <div style="text-align: center; margin-top: 20px; padding: 20px; color: #6b778c; font-size: 12px;">
-                        <p style="margin: 0;">This is an automated update from the Jira Sprint Board.</p>
-                    </div>
                 </body>
                 </html>
             `
@@ -252,6 +256,13 @@ async function sendEmail(issues: Issue[]): Promise<void> {
             console.log(`❌ Email rejected by server for: ${info.rejected.join(', ')}`);
         }
         
+        // Log the activity
+        const activityLogger = new EmailActivityLogger();
+        activityLogger.logSprintUpdate(true, recipients, issues.length);
+        
+        // Display activity summary
+        activityLogger.displayActivitySummary();
+        
     } catch (error) {
         console.error('❌ Error sending email:', error);
         console.log('\n📧 EMAIL CONTENT THAT WOULD HAVE BEEN SENT:');
@@ -264,6 +275,13 @@ async function sendEmail(issues: Issue[]): Promise<void> {
         console.log(table);
         console.log('='.repeat(60));
         console.log('⚠️ Email sending failed, but issue extraction was successful!');
+        
+        // Log the failed activity
+        const activityLogger = new EmailActivityLogger();
+        activityLogger.logSprintUpdate(false, recipients, issues.length, error instanceof Error ? error.message : String(error));
+        
+        // Display activity summary
+        activityLogger.displayActivitySummary();
         // Don't throw error, just continue
     }
 }
@@ -298,10 +316,21 @@ async function fetchJiraIssuesFromBoard(rapidViewId: string): Promise<Issue[]> {
         
         console.log(`✅ Successfully fetched ${issues.length} issues from Jira API!`);
         
-        // Display extracted issues
-        console.log('\n📋 FETCHED ISSUES:');
+        // Filter out closed issues (exclude Close, Closed, Done, Resolved statuses)
+        const closedStatuses = ['close', 'closed', 'done', 'resolved'];
+        const openIssues = issues.filter(issue => 
+            !closedStatuses.includes(issue.status.toLowerCase())
+        );
+        
+        const filteredCount = issues.length - openIssues.length;
+        if (filteredCount > 0) {
+            console.log(`🔍 Filtered out ${filteredCount} closed issues from sprint update email`);
+        }
+        
+        // Display extracted issues (only open issues)
+        console.log('\n📋 FETCHED ISSUES (EXCLUDING CLOSED):');
         console.log('='.repeat(80));
-        issues.forEach((issue, index) => {
+        openIssues.forEach((issue, index) => {
             console.log(`${(index + 1).toString().padStart(2)}. ${issue.key}`);
             console.log(`    Summary: ${issue.summary}`);
             console.log(`    Assignee: ${issue.assignee}`);
@@ -312,7 +341,7 @@ async function fetchJiraIssuesFromBoard(rapidViewId: string): Promise<Issue[]> {
         });
         console.log('='.repeat(80));
         
-        return issues;
+        return openIssues;
         
     } catch (error) {
         console.error('❌ Failed to fetch issues from Jira API:', error);

@@ -1,0 +1,31 @@
+{
+  "savedJiraIds": [
+    {
+      "id": "1753864193248",
+      "name": "AEM Forms Scrum Board",
+      "rapidViewId": "44313",
+      "boardName": "AEM Forms CX Scrum Board",
+      "boardType": "scrum",
+      "issueCount": 24,
+      "validated": true,
+      "addedAt": "2025-07-30T08:29:53.248Z"
+    }
+  ],
+  "scheduledTasks": [
+    {
+      "id": "1754297252773",
+      "type": "reminder",
+      "frequency": "weekly",
+      "time": "02:00",
+      "dayOfWeek": 1,
+      "enabled": true,
+      "rapidViewId": "44313",
+      "createdAt": "2025-08-04T08:47:32.773Z"
+    }
+  ],
+  "globalSettings": {
+    "defaultReminderTime": "09:00",
+    "enableDailyReminders": false,
+    "enableWeeklyReminders": false
+  }
+}

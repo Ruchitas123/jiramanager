@@ -9,6 +9,7 @@ interface JiraIssue {
     summary: string;
     status: string;
     assignee: string;
+    assigneeEmail?: string;
     issueType?: string;
     priority?: string;
 }
@@ -22,6 +23,10 @@ interface JiraApiIssue {
         };
         assignee: {
             displayName: string;
+            emailAddress?: string;
+            name?: string;
+            key?: string;
+            accountId?: string;
         } | null;
         issuetype: {
             name: string;
@@ -55,7 +60,7 @@ const constructAuthHeader = (email: string, token: string): string => {
 
 // Jira API configuration
 const config = {
-    PORT: process.env.PORT || '3001',
+    PORT: process.env.PORT || '3000',
     AUTH_HEADER: process.env.JIRA_USERNAME && process.env.JIRA_PASSWORD 
         ? constructAuthHeader(process.env.JIRA_USERNAME, process.env.JIRA_PASSWORD)
         : undefined,
@@ -134,6 +139,7 @@ class JiraService {
                 summary: issue.fields.summary,
                 status: issue.fields.status.name,
                 assignee: issue.fields.assignee?.displayName || 'Unassigned',
+                assigneeEmail: issue.fields.assignee?.emailAddress || issue.fields.assignee?.name || undefined,
                 issueType: issue.fields.issuetype.name,
                 priority: issue.fields.priority?.name || 'Medium'
             }));
@@ -173,6 +179,7 @@ class JiraService {
                 summary: issue.fields.summary,
                 status: issue.fields.status.name,
                 assignee: issue.fields.assignee?.displayName || 'Unassigned',
+                assigneeEmail: issue.fields.assignee?.emailAddress || issue.fields.assignee?.name || undefined,
                 issueType: issue.fields.issuetype.name,
                 priority: issue.fields.priority?.name || 'Medium'
             }));
